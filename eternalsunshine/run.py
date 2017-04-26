@@ -19,7 +19,7 @@ quote = "'"
 space = " "
 direct = " > "
 
-dll = rhost = rport = timeout = arch = version = process = ""
+dll = rhost = rport = timeout = arch = target = process = ""
 
 def getArguments():
 	global dll,rhost,rport,timeout,arch,version,process
@@ -33,7 +33,7 @@ def getArguments():
 	
 	args = argument_parser.parse_args()
 	arch = args.arch
-	version = args.version
+	target = args.version
 	rhost = args.host
 	rport = args.port
 	timeout = args.timeout
