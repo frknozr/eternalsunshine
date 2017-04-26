@@ -22,7 +22,7 @@ direct = " > "
 dll = rhost = rport = timeout = arch = target = process = ""
 
 def getArguments():
-	global dll,rhost,rport,timeout,arch,version,process
+	global dll,rhost,rport,timeout,arch,target,process
 	argument_parser.add_argument("-A","--arch",type=str,help="Target host architecture  x64|x86",required=True)
 	argument_parser.add_argument("-V","--version",type=str,help="Target host os version  XP|WIN72K8R2", required=True)
 	argument_parser.add_argument("-H","--host",type=str,help="Target host ip address",required=True)
@@ -120,6 +120,8 @@ def main():
 	banner()
 	getArguments()
 	print_info()
+	generate_eternalblue_config()
+	generate_doublepulsar_config()
 	print term.bold_yellow("[!] Starting EternalBlue")
 	eternalblue = run_eternalblue()
 	if eternalblue:
