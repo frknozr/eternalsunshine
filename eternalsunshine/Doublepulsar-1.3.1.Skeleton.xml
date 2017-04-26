@@ -25,7 +25,7 @@
 </t:paramchoice>
 <t:paramchoice name="Function" description="Operation for backdoor to perform">
 <t:default>OutputInstall</t:default>
-<t:value>%FUNCTION%L</t:value>
+<t:value>%FUNCTION%</t:value>
 <t:paramgroup name="OutputInstall" description="Only output the install shellcode to a binary file on disk.">
 <t:parameter name="OutputFile" description="Full path to the output file" type="String" format="Scalar"></t:parameter>
 </t:paramgroup>
