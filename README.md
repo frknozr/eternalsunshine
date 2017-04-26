@@ -1,5 +1,5 @@
 # EternalSunshine
 
-# Eternalblue-Doublepulsar-Python Wrapper
+## Eternalblue-Doublepulsar Python Wrapper
 
 python run.py --help
