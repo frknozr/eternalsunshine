@@ -2,4 +2,4 @@
 
 # Eternalblue-Doublepulsar-Python Wrapper
 
-python run.py -h
+python run.py --help
