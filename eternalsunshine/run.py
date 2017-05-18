@@ -16,6 +16,8 @@ doublepulsar_skeleton = "Doublepulsar-1.3.1.Skeleton.xml"
 doublepulsar_config = "Doublepulsar-1.3.1.xml"
 doublepulsar_exe = "Doublepulsar-1.3.1.exe"
 
+tild = "~"
+dquote = "\""
 quote = "'"
 space = " "
 direct = " > "
@@ -104,8 +106,7 @@ def generate_doublepulsar_config():
 	else:
 		print term.bold_red("[!] Wrong function string")
 		sys.exit()
-	
-	command = "sed " + quote + "s/%DLLPAY%/" + dll + "/" + quote + space + "-i " + doublepulsar_config 
+	command = "sed " + dquote + "s" + tild + "%DLLPAY%" + tild + dll + tild + dquote + " -i " + doublepulsar_config
 	os.system(command)
 
 	return status
